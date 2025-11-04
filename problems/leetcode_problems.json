@@ -1,0 +1,27 @@
+[
+  {
+    "title": "Vowels Game in a String",
+    "url": "https://leetcode.com/problems/vowels-game-in-a-string?envType=daily-question&envId=2025-09-12",
+    "description": "Alice and Bob are playing a game on a string. You are given a string s, Alice and Bob will take turns playing the following game where Alice starts first: The first player who cannot make a move on their turn loses the game. We assume that both Alice and Bob play optimally. Return true if Alice wins the game, and false otherwise. The English vowels are: a, e, i, o, and u."
+  },
+  {
+    "title": "Two Sum",
+    "url": "https://leetcode.com/problems/two-sum",
+    "description": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice. You can return the answer in any order."
+  },
+  {
+    "title": "Add Two Numbers",
+    "url": "https://leetcode.com/problems/add-two-numbers",
+    "description": "You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order, and each of their nodes contains a single digit. Add the two numbers and return the sum as a linked list. You may assume the two numbers do not contain any leading zero, except the number 0 itself."
+  },
+  {
+    "title": "Longest Substring Without Repeating Characters",
+    "url": "https://leetcode.com/problems/longest-substring-without-repeating-characters",
+    "description": "Given a string s, find the length of the longest substring without duplicate characters."
+  },
+  {
+    "title": "Median of Two Sorted Arrays",
+    "url": "https://leetcode.com/problems/median-of-two-sorted-arrays",
+    "description": "Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays. The overall run time complexity should be O(log (m+n))."
+  }
+]
