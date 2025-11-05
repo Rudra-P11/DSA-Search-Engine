@@ -36,20 +36,24 @@ let docVectors = [];
 let docMagnitudes = [];
 
 async function loadProblemsAndBuildIndex() {
-  const data = await fs.readFile("./corpus/all_problems.json", "utf-8");
-  problems = JSON.parse(data);
+  try {
+    const corpusPath = path.join(__dirname, "corpus", "all_problems.json");
+    const data = await fs.readFile(corpusPath, "utf-8");
+    problems = JSON.parse(data);
+  } catch (err) {
+    console.error("Failed to load corpus", err);
+    throw err;
+  }
 
   tfidf = new TfIdf();
 
-  // Add documents: title boosted by duplicating, plus description
   problems.forEach((problem, idx) => {
     const text = preprocess(
-      `${problem.title} ${problem.title} ${problem.description || ""}`
+      `${problem.title ?? ""} ${problem.title ?? ""} ${problem.description ?? ""}`
     );
     tfidf.addDocument(text, idx.toString());
   });
 
-  // Build document vectors and magnitudes for cosine similarity
   docVectors = [];
   docMagnitudes = [];
   problems.forEach((_, idx) => {
@@ -69,6 +73,8 @@ async function loadProblemsAndBuildIndex() {
 app.post("/search", async (req, res) => {
   const rawQuery = req.body.query;
   const sortOrder = req.body.sort;
+  const page = Math.max(1, parseInt(req.body.page) || 1);
+  const perPage = Math.max(1, parseInt(req.body.perPage) || 10);
 
   if (!rawQuery || typeof rawQuery !== "string") {
     return res.status(400).json({ error: "Missing or invalid 'query'" });
@@ -115,11 +121,10 @@ app.post("/search", async (req, res) => {
     return { idx, score: cosine };
   });
 
-  // Take top 10 non-zero scores
-  const top = scores
+  // Get all non-zero scores and sort by relevance
+  const allResults = scores
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 10)
     .map(({ idx }) => {
       const p = problems[idx];
       const platform = p.url.includes("leetcode.com")
@@ -128,17 +133,47 @@ app.post("/search", async (req, res) => {
       return { ...p, platform };
     });
 
+  // Apply secondary sorting if needed
   if (sortOrder === "title_asc") {
-    top.sort((a, b) => a.title.localeCompare(b.title));
+    allResults.sort((a, b) => a.title.localeCompare(b.title));
   } else if (sortOrder === "title_desc") {
-    top.sort((a, b) => b.title.localeCompare(a.title));
+    allResults.sort((a, b) => b.title.localeCompare(a.title));
   }
 
-  res.json({ results: top });
-});
+  // Paginate results
+  const totalResults = allResults.length;
+  const totalPages = Math.ceil(totalResults / perPage);
+  const startIdx = (page - 1) * perPage;
+  const endIdx = startIdx + perPage;
+  const paginatedResults = allResults.slice(startIdx, endIdx);
 
-loadProblemsAndBuildIndex().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  res.json({
+    results: paginatedResults,
+    pagination: {
+      currentPage: page,
+      perPage,
+      totalResults,
+      totalPages,
+    },
   });
 });
+
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled rejection", reason);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception", err);
+  process.exit(1);
+});
+
+loadProblemsAndBuildIndex()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to initialize search index", err);
+    process.exit(1);
+  });

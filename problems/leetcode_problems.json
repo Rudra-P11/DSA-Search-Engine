@@ -1,8 +1,8 @@
 [
   {
-    "title": "Vowels Game in a String",
-    "url": "https://leetcode.com/problems/vowels-game-in-a-string?envType=daily-question&envId=2025-09-12",
-    "description": "Alice and Bob are playing a game on a string. You are given a string s, Alice and Bob will take turns playing the following game where Alice starts first: The first player who cannot make a move on their turn loses the game. We assume that both Alice and Bob play optimally. Return true if Alice wins the game, and false otherwise. The English vowels are: a, e, i, o, and u."
+    "title": "Find X-Sum of All K-Long Subarrays I",
+    "url": "https://leetcode.com/problems/find-x-sum-of-all-k-long-subarrays-i?envType=daily-question&envId=2025-11-04",
+    "description": "You are given an array nums of n integers and two integers k and x. The x-sum of an array is calculated by the following procedure: Note that if an array has less than x distinct elements, its x-sum is the sum of the array. Return an integer array answer of length n - k + 1 where answer[i] is the x-sum of the subarray nums[i..i + k - 1]."
   },
   {
     "title": "Two Sum",
@@ -23,5 +23,30 @@
     "title": "Median of Two Sorted Arrays",
     "url": "https://leetcode.com/problems/median-of-two-sorted-arrays",
     "description": "Given two sorted arrays nums1 and nums2 of size m and n respectively, return the median of the two sorted arrays. The overall run time complexity should be O(log (m+n))."
+  },
+  {
+    "title": "Longest Palindromic Substring",
+    "url": "https://leetcode.com/problems/longest-palindromic-substring",
+    "description": "Given a string s, return the longest palindromic substring in s."
+  },
+  {
+    "title": "Zigzag Conversion",
+    "url": "https://leetcode.com/problems/zigzag-conversion",
+    "description": "The string \"PAYPALISHIRING\" is written in a zigzag pattern on a given number of rows like this: (you may want to display this pattern in a fixed font for better legibility) And then read line by line: \"PAHNAPLSIIGYIR\" Write the code that will take a string and make this conversion given a number of rows:"
+  },
+  {
+    "title": "Reverse Integer",
+    "url": "https://leetcode.com/problems/reverse-integer",
+    "description": "Given a signed 32-bit integer x, return x with its digits reversed. If reversing x causes the value to go outside the signed 32-bit integer range [-231, 231 - 1], then return 0. Assume the environment does not allow you to store 64-bit integers (signed or unsigned)."
+  },
+  {
+    "title": "String to Integer (atoi)",
+    "url": "https://leetcode.com/problems/string-to-integer-atoi",
+    "description": "Implement the myAtoi(string s) function, which converts a string to a 32-bit signed integer. The algorithm for myAtoi(string s) is as follows: Return the integer as the final result."
+  },
+  {
+    "title": "Palindrome Number",
+    "url": "https://leetcode.com/problems/palindrome-number",
+    "description": "Given an integer x, return true if x is a palindrome, and false otherwise."
   }
 ]

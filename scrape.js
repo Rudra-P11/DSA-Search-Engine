@@ -6,6 +6,8 @@ const parseLimit = (value, fallback) => {
   const parsed = Number.parseInt(value ?? "", 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 };
+const log = (...entries) =>
+  console.log(new Date().toISOString(), ...entries);
 const LEETCODE_TARGET = parseLimit(process.env.LEETCODE_LIMIT, 100);
 const LEETCODE_DESCRIPTIONS = parseLimit(process.env.LEETCODE_DESCRIPTIONS, 10);
 const CODEFORCES_PAGES = parseLimit(process.env.CODEFORCES_PAGES, 2);
@@ -23,10 +25,13 @@ const userAgent =
   "Chrome/114.0.5735.199 Safari/537.36";
 
 async function scrapeLeetcodeProblems(browser) {
+  log("Starting LeetCode scrape with target", LEETCODE_TARGET);
   const page = await browser.newPage();
+  await page.setDefaultNavigationTimeout(60000);
+  await page.setDefaultTimeout(60000);
   await page.setUserAgent(userAgent);
   await page.goto("https://leetcode.com/problemset/", {
-    waitUntil: "domcontentloaded",
+    waitUntil: "networkidle2",
   });
 
   const problemSelector =
@@ -118,10 +123,17 @@ async function scrapeLeetcodeProblems(browser) {
     "./problems/leetcode_problems.json",
     JSON.stringify(problemsWithDescriptions, null, 2)
   );
+  log("LeetCode scrape complete with", problemsWithDescriptions.length, "items");
 }
 
 async function scrapeCodeforcesProblems(browser) {
+  log("Starting Codeforces scrape", {
+    pages: CODEFORCES_PAGES,
+    perPage: CODEFORCES_PER_PAGE,
+  });
   const page = await browser.newPage();
+  await page.setDefaultNavigationTimeout(60000);
+  await page.setDefaultTimeout(60000);
   await page.setUserAgent(userAgent);
 
   const problems = [];
@@ -129,8 +141,7 @@ async function scrapeCodeforcesProblems(browser) {
   for (let pageIndex = 1; pageIndex <= CODEFORCES_PAGES; pageIndex++) {
     const url = `https://codeforces.com/problemset/page/${pageIndex}`;
 
-    await page.goto(url, { waitUntil: "domcontentloaded" });
-    await delay(SCRAPE_DELAY);
+    await page.goto(url, { waitUntil: "networkidle2" });
 
     const problemSelector =
       "table.problems tr td:nth-of-type(2) > div:first-of-type > a";
@@ -144,8 +155,9 @@ async function scrapeCodeforcesProblems(browser) {
     const limitedLinks = links.slice(0, CODEFORCES_PER_PAGE);
 
     for (const link of limitedLinks) {
+      log("Scraping Codeforces problem", link);
       try {
-        await page.goto(link, { waitUntil: "domcontentloaded" });
+        await page.goto(link, { waitUntil: "networkidle2" });
 
         const result = await page.evaluate(() => {
           const titleNode = document.querySelector(".problem-statement .title");

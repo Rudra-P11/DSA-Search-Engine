@@ -7,6 +7,12 @@ const SORT_OPTIONS = [
   { value: "title_desc", label: "Title Z–A" },
 ];
 
+const RESULTS_PER_PAGE_OPTIONS = [
+  { value: 5, label: "5 per page" },
+  { value: 10, label: "10 per page" },
+  { value: 15, label: "15 per page" },
+];
+
 const PLATFORM_META = {
   LeetCode: {
     label: "LeetCode",
@@ -81,6 +87,7 @@ const SortMenu = ({ value, onChange, disabled }) => {
         type="button"
         disabled={disabled}
         onClick={() => setOpen((prev) => !prev)}
+        data-testid="sort-select"
         className={classNames(
           "flex items-center gap-2 rounded-full border border-white/10 bg-slate-900/70 px-4 py-2 text-sm font-medium text-slate-200 shadow-sm transition hover:border-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
           disabled && "opacity-50"
@@ -145,6 +152,202 @@ const SortMenu = ({ value, onChange, disabled }) => {
   );
 };
 
+const PageSizeMenu = ({ value, onChange, disabled }) => {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef(null);
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const handlePointer = (event) => {
+      if (!menuRef.current || menuRef.current.contains(event.target)) {
+        return;
+      }
+      setOpen(false);
+    };
+    window.addEventListener("pointerdown", handlePointer);
+    return () => {
+      window.removeEventListener("pointerdown", handlePointer);
+    };
+  }, [open]);
+  useEffect(() => {
+    if (disabled) {
+      setOpen(false);
+    }
+  }, [disabled]);
+  const activeOption =
+    RESULTS_PER_PAGE_OPTIONS.find((option) => option.value === value) ??
+    RESULTS_PER_PAGE_OPTIONS[1];
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen((prev) => !prev)}
+        data-testid="results-per-page-select"
+        className={classNames(
+          "flex items-center gap-2 rounded-full border border-white/10 bg-slate-900/70 px-4 py-2 text-sm font-medium text-slate-200 shadow-sm transition hover:border-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
+          disabled && "opacity-50"
+        )}
+      >
+        <span>{activeOption.label}</span>
+        <svg
+          className={classNames(
+            "h-4 w-4 transition-transform", open ? "rotate-180" : "rotate-0"
+          )}
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        >
+          <path d="M5 7l5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/95 p-1 shadow-2xl backdrop-blur">
+          {RESULTS_PER_PAGE_OPTIONS.map((option) => {
+            const isActive = option.value === value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => {
+                  onChange(option.value);
+                  setOpen(false);
+                }}
+                className={classNames(
+                  "flex w-full items-center justify-between rounded-xl px-4 py-2 text-sm transition",
+                  isActive
+                    ? "bg-primary-500/15 text-primary-200"
+                    : "text-slate-300 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                <span>{option.label}</span>
+                {isActive && (
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-500/20 text-primary-200">
+                    <svg
+                      viewBox="0 0 20 20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      className="h-4 w-4"
+                    >
+                      <path
+                        d="M6 10l2 2 6-6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const Pagination = ({
+  currentPage,
+  totalPages,
+  onPageChange,
+  disabled,
+}) => {
+  if (totalPages <= 1) {
+    return null;
+  }
+
+  const pageNumbers = [];
+  const maxButtons = 5;
+  let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+  let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+  if (endPage - startPage + 1 < maxButtons) {
+    startPage = Math.max(1, endPage - maxButtons + 1);
+  }
+
+  if (startPage > 1) {
+    pageNumbers.push(1);
+    if (startPage > 2) {
+      pageNumbers.push("...");
+    }
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    pageNumbers.push(i);
+  }
+
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) {
+      pageNumbers.push("...");
+    }
+    pageNumbers.push(totalPages);
+  }
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2" data-testid="pagination-container">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={disabled || currentPage === 1}
+        data-testid="prev-page-button"
+        className={classNames(
+          "rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2 text-sm font-medium transition",
+          disabled || currentPage === 1
+            ? "cursor-not-allowed text-slate-500 opacity-50"
+            : "text-slate-200 hover:border-white/20 hover:text-white"
+        )}
+      >
+        ← Previous
+      </button>
+
+      <div className="flex flex-wrap items-center justify-center gap-1">
+        {pageNumbers.map((pageNum, idx) => {
+          if (pageNum === "...") {
+            return (
+              <span key={`ellipsis-${idx}`} className="px-2 text-slate-400">
+                …
+              </span>
+            );
+          }
+          const isActive = pageNum === currentPage;
+          return (
+            <button
+              key={pageNum}
+              onClick={() => onPageChange(pageNum)}
+              disabled={disabled}
+              className={classNames(
+                "min-w-10 rounded-lg border px-3 py-2 text-sm font-medium transition",
+                isActive
+                  ? "border-primary-500/50 bg-primary-500/15 text-primary-200"
+                  : "border-white/10 bg-slate-900/70 text-slate-200 hover:border-white/20 hover:text-white",
+                disabled && "cursor-not-allowed opacity-50"
+              )}
+            >
+              {pageNum}
+            </button>
+          );
+        })}
+      </div>
+
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={disabled || currentPage === totalPages}
+        data-testid="next-page-button"
+        className={classNames(
+          "rounded-lg border border-white/10 bg-slate-900/70 px-3 py-2 text-sm font-medium transition",
+          disabled || currentPage === totalPages
+            ? "cursor-not-allowed text-slate-500 opacity-50"
+            : "text-slate-200 hover:border-white/20 hover:text-white"
+        )}
+      >
+        Next →
+      </button>
+    </div>
+  );
+};
+
 const LoadingIndicator = () => (
   <div className="flex flex-col items-center gap-3 py-16 text-slate-400">
     <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5">
@@ -197,6 +400,7 @@ const ResultCard = ({ problem, index }) => {
   const isTop = index === 0;
   return (
     <article
+      data-testid="result-card"
       className={classNames(
         "group relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/70 p-6 transition duration-300",
         isTop
@@ -208,7 +412,7 @@ const ResultCard = ({ problem, index }) => {
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3 text-xs font-medium uppercase tracking-[0.3em] text-slate-400">
-            <span className="rounded-full bg-white/5 px-3 py-1 text-[0.7rem] font-semibold text-white/90">
+            <span className="rounded-full bg-white/5 px-3 py-1 text-[0.7rem] font-semibold text-white/90" data-testid="result-number">
               #{String(index + 1).padStart(2, "0")}
             </span>
             <PlatformBadge platform={problem.platform} />
@@ -219,7 +423,7 @@ const ResultCard = ({ problem, index }) => {
             rel="noopener noreferrer"
             className="block"
           >
-            <h3 className="font-display text-xl font-semibold text-white transition group-hover:text-primary-100 md:text-2xl">
+            <h3 className="font-display text-xl font-semibold text-white transition group-hover:text-primary-100 md:text-2xl" data-testid="result-title">
               {problem.title}
             </h3>
           </a>
@@ -256,9 +460,17 @@ const ResultCard = ({ problem, index }) => {
 const App = () => {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState("relevance");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [resultsPerPage, setResultsPerPage] = useState(10);
   const [request, setRequest] = useState(null);
   const [status, setStatus] = useState("idle");
   const [results, setResults] = useState([]);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    perPage: 10,
+    totalResults: 0,
+    totalPages: 0,
+  });
   const [error, setError] = useState("");
 
   const activeQuery = request?.query ?? "";
@@ -273,7 +485,11 @@ const App = () => {
       setResults([]);
       setError("");
       try {
-        const payload = { query: request.query };
+        const payload = {
+          query: request.query,
+          page: currentPage,
+          perPage: resultsPerPage,
+        };
         if (sort !== "relevance") {
           payload.sort = sort;
         }
@@ -291,6 +507,7 @@ const App = () => {
         }
         const items = data.results ?? [];
         setResults(items);
+        setPagination(data.pagination ?? {});
         setStatus(items.length ? "success" : "empty");
       } catch (err) {
         if (cancelled) {
@@ -304,7 +521,7 @@ const App = () => {
     return () => {
       cancelled = true;
     };
-  }, [request, sort]);
+  }, [request, sort, currentPage, resultsPerPage]);
 
   const headline = useMemo(() => {
     if (status !== "success") {
@@ -322,8 +539,14 @@ const App = () => {
       setError("Enter a problem title, topic, or tag to search.");
       return;
     }
+    setCurrentPage(1);
     setRequest({ query: trimmed, timestamp: Date.now() });
     setQuery(trimmed);
+  };
+
+  const handleResultsPerPageChange = (newPerPage) => {
+    setResultsPerPage(newPerPage);
+    setCurrentPage(1);
   };
 
   return (
@@ -381,11 +604,6 @@ const App = () => {
               )}
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-              <SortMenu
-                value={sort}
-                onChange={setSort}
-                disabled={!request || status === "loading"}
-              />
               <button
                 type="submit"
                 className="inline-flex items-center justify-center rounded-2xl bg-primary-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:bg-primary-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-200"
@@ -422,16 +640,42 @@ const App = () => {
                 <h2 className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">
                   {headline}
                 </h2>
-                <SortMenu
-                  value={sort}
-                  onChange={setSort}
-                  disabled={status === "loading"}
-                />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+                  <PageSizeMenu
+                    value={resultsPerPage}
+                    onChange={handleResultsPerPageChange}
+                    disabled={status === "loading"}
+                  />
+                  <SortMenu
+                    value={sort}
+                    onChange={setSort}
+                    disabled={status === "loading"}
+                  />
+                </div>
               </div>
               <div className="grid gap-5">
                 {results.map((problem, index) => (
-                  <ResultCard key={problem.url} problem={problem} index={index} />
+                  <ResultCard
+                    key={problem.url}
+                    problem={problem}
+                    index={(pagination.currentPage - 1) * pagination.perPage + index}
+                  />
                 ))}
+              </div>
+              <div className="space-y-4">
+                {pagination.totalPages > 1 && (
+                  <div className="flex flex-col items-center justify-center gap-4">
+                    <p className="text-xs text-slate-400" data-testid="pagination-info">
+                      Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalResults} total results)
+                    </p>
+                    <Pagination
+                      currentPage={pagination.currentPage}
+                      totalPages={pagination.totalPages}
+                      onPageChange={setCurrentPage}
+                      disabled={status === "loading"}
+                    />
+                  </div>
+                )}
               </div>
             </>
           )}
