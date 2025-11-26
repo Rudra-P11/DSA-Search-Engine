@@ -71,6 +71,14 @@ async function buildIndex() {
     console.log(
       `  - Doc vectors: ${docVectors.length}`
     );
+    
+    console.log("File exists at output path:", outputPath);
+    try {
+      const stat = await fs.stat(outputPath);
+      console.log("File size:", stat.size, "bytes");
+    } catch (e) {
+      console.error("Failed to verify file:", e);
+    }
   } catch (err) {
     console.error("Build failed:", err);
     process.exit(1);

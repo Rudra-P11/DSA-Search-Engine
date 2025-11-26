@@ -36,12 +36,38 @@ async function loadPrebuiltIndex() {
   }
 
   try {
-    const indexPath = process.env.LAMBDA_TASK_ROOT
-      ? path.join(process.env.LAMBDA_TASK_ROOT, "netlify/functions/index-data.json")
-      : path.join(import.meta.url.replace("file://", ""), "../index-data.json");
+    let indexPath;
+    let data;
+    
+    if (process.env.LAMBDA_TASK_ROOT) {
+      const possiblePaths = [
+        path.join(process.env.LAMBDA_TASK_ROOT, "netlify/functions/index-data.json"),
+        path.join(process.env.LAMBDA_TASK_ROOT, "index-data.json"),
+      ];
+      
+      console.log("LAMBDA_TASK_ROOT:", process.env.LAMBDA_TASK_ROOT);
+      console.log("Checking paths:", possiblePaths);
+      
+      for (const p of possiblePaths) {
+        try {
+          console.log("Trying:", p);
+          data = await fs.readFile(p, "utf-8");
+          indexPath = p;
+          break;
+        } catch (e) {
+          console.log("Not found:", p);
+        }
+      }
+    } else {
+      indexPath = path.resolve("netlify/functions/index-data.json");
+      data = await fs.readFile(indexPath, "utf-8");
+    }
+    
+    if (!data) {
+      throw new Error("Could not find index-data.json in any expected location");
+    }
     
     console.log("Loading pre-built index from:", indexPath);
-    const data = await fs.readFile(indexPath, "utf-8");
     const indexData = JSON.parse(data);
     
     problems = indexData.problems;

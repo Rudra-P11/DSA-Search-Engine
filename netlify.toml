@@ -1,7 +1,8 @@
 [build]
-  command = "node build.js"
+  command = "node build.js && echo 'Build complete'"
   publish = "."
   functions = "netlify/functions"
+  ignore = "git diff --quiet HEAD^ HEAD -- $INCOMING_HOOK_BODY"
 
 [[redirects]]
   from = "/*"
