@@ -555,7 +555,7 @@ const App = () => {
       <div className="mx-auto flex max-w-5xl flex-col gap-12 px-4 pb-24 pt-16 sm:px-6 lg:px-8">
         <header className="space-y-6 text-center">
           <span className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-slate-300">
-            DSA Intelligence Hub
+            Search Intelligence ++
           </span>
           <h1 className="font-display text-4xl font-semibold leading-tight text-white sm:text-5xl">
             Discover coding challenges in a single intelligent search
