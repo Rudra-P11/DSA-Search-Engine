@@ -1,9 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import pkg from "natural";
 import { removeStopwords } from "stopword";
-
-const { TfIdf } = pkg;
 
 let problems = [];
 let docVectors = [];
@@ -137,11 +134,11 @@ export const handler = async (event, context) => {
     const N = tokens.length;
     Object.entries(termFreq).forEach(([term, count]) => {
       const tf = count / N;
-      const idf = tfidf.idf(term);
-      if (!Number.isFinite(idf) || idf <= 0) {
+      const idfValue = idf(term);
+      if (!Number.isFinite(idfValue) || idfValue <= 0) {
         return;
       }
-      const w = tf * idf;
+      const w = tf * idfValue;
       queryVector[term] = w;
       sumSqQ += w * w;
     });
