@@ -1,5 +1,5 @@
 [build]
-  command = "echo 'Building...'"
+  command = "node build.js"
   publish = "."
   functions = "netlify/functions"
 

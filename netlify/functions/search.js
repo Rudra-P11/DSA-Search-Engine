@@ -6,7 +6,6 @@ import { removeStopwords } from "stopword";
 const { TfIdf } = pkg;
 
 let problems = [];
-let tfidf = new TfIdf();
 let docVectors = [];
 let docMagnitudes = [];
 let isInitialized = false;
@@ -20,48 +19,40 @@ function preprocess(text) {
   ).join(" ");
 }
 
-async function loadProblemsAndBuildIndex() {
+function idf(term) {
+  let matches = 0;
+  for (let i = 0; i < docVectors.length; i++) {
+    if (docVectors[i][term]) {
+      matches++;
+    }
+  }
+  if (matches === 0) return -Infinity;
+  return Math.log(docVectors.length / matches);
+}
+
+async function loadPrebuiltIndex() {
   if (isInitialized) {
     return;
   }
 
   try {
-    const corpusPath = process.env.LAMBDA_TASK_ROOT
-      ? path.join(process.env.LAMBDA_TASK_ROOT, "corpus/all_problems.json")
-      : path.resolve("corpus/all_problems.json");
+    const indexPath = process.env.LAMBDA_TASK_ROOT
+      ? path.join(process.env.LAMBDA_TASK_ROOT, "netlify/functions/index-data.json")
+      : path.join(import.meta.url.replace("file://", ""), "../index-data.json");
     
-    console.log("Loading corpus from:", corpusPath);
-    const data = await fs.readFile(corpusPath, "utf-8");
-    problems = JSON.parse(data);
-    console.log("Loaded", problems.length, "problems");
+    console.log("Loading pre-built index from:", indexPath);
+    const data = await fs.readFile(indexPath, "utf-8");
+    const indexData = JSON.parse(data);
+    
+    problems = indexData.problems;
+    docVectors = indexData.docVectors;
+    docMagnitudes = indexData.docMagnitudes;
+    
+    console.log("Loaded", problems.length, "problems from pre-built index");
   } catch (err) {
-    console.error("Failed to load corpus:", err);
+    console.error("Failed to load pre-built index:", err);
     throw err;
   }
-
-  tfidf = new TfIdf();
-
-  problems.forEach((problem, idx) => {
-    const text = preprocess(
-      `${problem.title ?? ""} ${problem.title ?? ""} ${problem.description ?? ""}`
-    );
-    tfidf.addDocument(text, idx.toString());
-  });
-
-  docVectors = [];
-  docMagnitudes = [];
-  problems.forEach((_, idx) => {
-    const vector = {};
-    let sumSquares = 0;
-
-    tfidf.listTerms(idx).forEach(({ term, tfidf: weight }) => {
-      vector[term] = weight;
-      sumSquares += weight * weight;
-    });
-
-    docVectors[idx] = vector;
-    docMagnitudes[idx] = Math.sqrt(sumSquares);
-  });
 
   isInitialized = true;
 }
@@ -91,7 +82,7 @@ export const handler = async (event, context) => {
   }
 
   try {
-    await loadProblemsAndBuildIndex();
+    await loadPrebuiltIndex();
 
     const body = JSON.parse(event.body);
     const rawQuery = body.query;
