@@ -1,13 +1,9 @@
 import fs from "fs/promises";
 import path from "path";
-import { fileURLToPath } from "url";
 import pkg from "natural";
 import { removeStopwords } from "stopword";
 
 const { TfIdf } = pkg;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 let problems = [];
 let tfidf = new TfIdf();
@@ -30,11 +26,16 @@ async function loadProblemsAndBuildIndex() {
   }
 
   try {
-    const corpusPath = path.join(__dirname, "../../corpus/all_problems.json");
+    const corpusPath = process.env.LAMBDA_TASK_ROOT
+      ? path.join(process.env.LAMBDA_TASK_ROOT, "corpus/all_problems.json")
+      : path.resolve("corpus/all_problems.json");
+    
+    console.log("Loading corpus from:", corpusPath);
     const data = await fs.readFile(corpusPath, "utf-8");
     problems = JSON.parse(data);
+    console.log("Loaded", problems.length, "problems");
   } catch (err) {
-    console.error("Failed to load corpus", err);
+    console.error("Failed to load corpus:", err);
     throw err;
   }
 
